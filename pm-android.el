@@ -35,7 +35,7 @@
 (defvar pm-android-search-history '())
 
 (defvar pm-android-subprojects '(("out"	.	(concat "/out/target/product/" aosp-board-name "/"))
-				 ("pub"	.	(concat "/pub/" (upcase aosp-board-name) "/"))))
+				 ("pub"	.	(concat "/pub/" aosp-board-name "/"))))
 
 (defsubst pm-android-device ()
   (concat aosp-board-name "-" aosp-build-variant))
