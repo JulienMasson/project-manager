@@ -24,6 +24,7 @@
 (defvar pm-android-search-tools
   '(("mgrep"       "mgrep "  nil)
     ("cgrep"       "cgrep "  nil)
+    ("rcgrep"      "rcgrep "  nil)
     ("jgrep"       "jgrep "  nil)
     ("find-module" "mgrep "  " | grep LOCAL_MODULE")))
 
