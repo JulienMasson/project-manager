@@ -71,11 +71,14 @@
 	(default-directory (concat aosp-path "/")))
     (unless (string-match default-directory module-dir)
       (setq module-dir default-directory))
-    (compilation-start (concat "source build/envsetup.sh && "
-			       (format "cd %s && " (untramp-path module-dir))
-			       (car (assoc-default search pm-android-search-tools))
-			       command-args " ./ "
-			       (car (last (assoc-default search pm-android-search-tools))))
+    (compilation-start (concat
+			"/bin/bash -c '"
+			"source build/envsetup.sh && "
+			(format "cd %s && " (untramp-path module-dir))
+			(car (assoc-default search pm-android-search-tools))
+			command-args " ./ "
+			(car (last (assoc-default search pm-android-search-tools)))
+			"'")
 		       'grep-mode)
     (with-current-buffer "*grep*"
       (setq default-directory module-dir))))
@@ -121,12 +124,14 @@
 
 (defun pm-android-build-target (target)
   (let ((default-directory (concat aosp-path "/")))
-    (compile (concat (pm-android-load-compile-env)
-		     "make -j" (number-to-string aosp-thread-number) " "
-		     (if aosp-compile-options
-			 (mapconcat 'identity aosp-compile-options " ")
-		       "")
-		     " " target))))
+    (compile (concat
+	      "/bin/bash -c '"
+	      (pm-android-load-compile-env)
+	      "make -j" (number-to-string aosp-thread-number) " "
+	      (if aosp-compile-options
+		  (mapconcat 'identity aosp-compile-options " ")
+		"")
+	      " " target "'"))))
 
 (defun pm-android-subproject ()
   (let ((cur-path (expand-file-name default-directory)))
