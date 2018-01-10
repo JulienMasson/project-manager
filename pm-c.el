@@ -2,9 +2,9 @@
 
 (defun pm-c-compile ()
   (interactive)
-  (if (project- compile-fun current-project)
-      (call-interactively (project-compile-fun current-project))
-    (compile)))
+  (if (fboundp 'project-compile-fun)
+      (project-compile-fun current-project)
+    (call-interactively 'compile)))
 
 (pm-register-backend
  (make-pm-backend :name "c"
