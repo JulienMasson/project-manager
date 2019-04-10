@@ -14,7 +14,8 @@
   (find-file 'ignore)
   (find-file-hook 'ignore)
   (search 'ignore)
-  (compile 'ignore))
+  (compile 'ignore)
+  (debug 'ignore))
 
 (defvar project-manager-switch-hook '()
   "Hook list runned when you swith from one project to
@@ -116,6 +117,10 @@
 (defun project-compile ()
   (interactive)
   (call-interactively (pm-backend-compile (project-backend current-project))))
+
+(defun project-debug ()
+  (interactive)
+  (call-interactively (pm-backend-debug (project-backend current-project))))
 
 (defun project-smart-compile ()
   (interactive)
