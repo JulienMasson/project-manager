@@ -93,7 +93,11 @@
 
 (defun project-find-file ()
   (interactive)
-  (call-interactively (pm-backend-find-file (project-backend current-project))))
+  (let* ((backend (project-backend current-project))
+	 (find-file (pm-backend-find-file backend)))
+    (if (and find-file (not (eq find-file 'ignore)))
+	(call-interactively find-file)
+      (project-find-file-subproject))))
 
 (defun project-find-file-subproject (&optional subprojects history)
   (interactive)
