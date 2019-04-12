@@ -63,14 +63,15 @@
   (pm-kernel-build-target (concat "make " kernel-defconfig)))
 
 (defun pm-kernel-build-all ()
-  (let ((default-directory current-root-path))
+  (let ((default-directory current-root-path)
+	(local-path (untramp-path kernel-out-files)))
     (if (file-directory-p kernel-out-files)
 	(pm-kernel-build-target (mapconcat
 				 'identity
 				 `("make -j$(nproc)"
-				   ,(concat "make install INSTALL_PATH=" kernel-out-files)
-				   ,(concat "make headers_install INSTALL_HDR_PATH=" kernel-out-files)
-				   ,(concat "make modules_install INSTALL_MOD_PATH=" kernel-out-files))
+				   ,(concat "make install INSTALL_PATH=" local-path)
+				   ,(concat "make headers_install INSTALL_HDR_PATH=" local-path)
+				   ,(concat "make modules_install INSTALL_MOD_PATH=" local-path))
 				 " && "))
       (pm-kernel-error-msg (format "%s doesn't exist" kernel-out-files)))))
 
