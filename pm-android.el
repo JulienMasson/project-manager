@@ -34,8 +34,8 @@
 (defvar pm-android-compile-options-history '())
 (defvar pm-android-search-history '())
 
-(defvar pm-android-subprojects '(("out"	.	(concat "/out/target/product/" aosp-board-name "/"))
-				 ("pub"	.	(concat "/pub/" aosp-board-name "/"))))
+(defvar pm-android-subprojects '(("out"	.	(concat "out/target/product/" aosp-board-name "/"))
+				 ("pub"	.	(concat "pub/" aosp-board-name "/"))))
 
 (defsubst pm-android-device ()
   (concat aosp-board-name "-" aosp-build-variant))
@@ -68,7 +68,7 @@
 				  nil 'pm-android-search-history
 				  (car pm-android-search-history))))
   (let ((module-dir default-directory)
-	(default-directory (concat aosp-path "/")))
+	(default-directory aosp-path))
     (unless (string-match default-directory module-dir)
       (setq module-dir default-directory))
     (compilation-start (concat
@@ -101,14 +101,14 @@
 
 (defun pm-android-repo-sync ()
   (interactive)
-  (let ((default-directory (concat aosp-path "/")))
+  (let ((default-directory aosp-path))
     (compile (concat (pm-android-env-vars)
 		     (format "repo sync -j%d" aosp-thread-number)))))
 
 (defun pm-android-build-current ()
   (interactive)
   (let ((module-dir (untramp-path default-directory))
-	(default-directory (concat aosp-path "/")))
+	(default-directory aosp-path))
     (compile (concat (pm-android-load-compile-env)
 		     (format "cd %s && mm -j%d" module-dir aosp-thread-number)
 		     (if aosp-compile-options
@@ -123,7 +123,7 @@
   (pm-android-build-target target))
 
 (defun pm-android-build-target (target)
-  (let ((default-directory (concat aosp-path "/")))
+  (let ((default-directory aosp-path))
     (compile (concat
 	      "/bin/bash -c '"
 	      (pm-android-load-compile-env)
@@ -172,7 +172,7 @@
   (setq aosp-path current-root-path))
 
 (defun pm-android-lunch-list ()
-  (let ((default-directory (concat aosp-path "/")))
+  (let ((default-directory aosp-path))
     (shell-command-to-string "source build/envsetup.sh >/dev/null 2>&1 && echo ${LUNCH_MENU_CHOICES[*]}")))
 
 (defun pm-android-set-board (board)

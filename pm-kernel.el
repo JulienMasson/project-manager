@@ -48,7 +48,7 @@
   (message (concat (propertize "Error: " 'face 'error) msg)))
 
 (defun pm-kernel-path-env ()
-  (format "PATH=%s/bin:$PATH" (untramp-path kernel-toolchain-path)))
+  (format "PATH=%sbin:$PATH" (untramp-path kernel-toolchain-path)))
 
 (defun pm-kernel-compile-env ()
   (format "ARCH=%s CROSS_COMPILE=%s" kernel-arch kernel-cross-compile))
@@ -109,9 +109,9 @@
 (defun pm-kernel-debug (trigger)
   (interactive (list (yes-or-no-p "Trigger KGDB ? ")))
   (let ((default-directory current-root-path)
-	(gdb-default-cmd (format "%s/bin/%sgdb" kernel-toolchain-path
+	(gdb-default-cmd (format "%sbin/%sgdb" kernel-toolchain-path
 				 kernel-cross-compile))
-	(vmlinux (concat current-root-path "/vmlinux"))
+	(vmlinux (concat current-root-path "vmlinux"))
 	(port pm-kernel-debug-default-port)
 	(speed pm-kernel-debug-default-speed)
 	(kgdb-default-root-cmd "su"))
