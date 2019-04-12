@@ -25,10 +25,12 @@
 (require 'project-manager)
 
 ;; External
+(defvar c-executable nil)
 (defvar c-export-vars nil)
 (defvar c-build-system nil)
 
 ;; Internal
+(defvar pm-c-exec-process nil)
 (defvar pm-c-current-build-system nil)
 
 (defvar pm-c-make-build-system
@@ -86,9 +88,10 @@
 (defun pm-c-set-current-build-system ()
   (let ((default-targets '(("interactive" . pm-c-build-interactive)))
 	(build-targets (eval (assoc-default c-build-system pm-c-build-system-assoc))))
-  (setq pm-c-current-build-system (append build-targets default-targets))))
+    (setq pm-c-current-build-system (append build-targets default-targets))))
 
 (defun pm-c-reset-external-vars ()
+  (setq c-executable nil)
   (setq c-export-vars nil)
   (setq c-build-system nil))
 
@@ -97,13 +100,58 @@
   (let ((default-directory current-root-path))
     (grep (concat grep-command " --include=\"*.[c|h]\" " search))))
 
+(defun pm-c-find-executable ()
+  (let ((default-directory current-root-path))
+    (if (and c-executable (file-exists-p c-executable))
+	c-executable
+      (ido-read-file-name "Executable: "))))
+
+(defun pm-c-process-filter (p str)
+  (with-current-buffer (process-buffer p)
+    (let ((inhibit-read-only t))
+      (save-excursion-if-not-at-point-max (current-buffer)
+	(goto-char (point-max))
+	(insert (ansi-color-apply
+		 (replace-regexp-in-string "\r" "\n" str)))))))
+
+(defun pm-c-exec-insert-header (program)
+  (let ((inhibit-read-only t)
+	(root (propertize current-root-path 'face 'font-lock-type-face))
+	(cmd (propertize program 'face 'font-lock-keyword-face)))
+    (insert (format "Working directory: %s\n\n" root))
+    (insert (format "Bash command: %s\n\n" cmd))))
+
+(defun pm-c-exec ()
+  (interactive)
+  (let* ((default-directory current-root-path)
+	 (executable (pm-c-find-executable))
+	 (vars (pm-c-export-vars))
+	 (program (concat (if vars (format "export %s && " vars))
+			  "./" executable))
+	 (buffer-name (format "*project-manager: %s*" executable))
+	 (process (get-buffer-process buffer-name)))
+    (if (get-buffer buffer-name)
+	(with-current-buffer buffer-name
+	  (let ((inhibit-read-only t)
+		(prompt-process (format "%s running, kill it ? " executable)))
+	    (when (and process (yes-or-no-p prompt-process))
+	      (kill-process process))
+	    (erase-buffer)))
+      (get-buffer-create buffer-name))
+    (with-current-buffer buffer-name
+      (pm-c-exec-insert-header program)
+      (read-only-mode t)
+      (start-file-process executable (current-buffer) "bash" "-c" program)
+      (set-process-filter (get-buffer-process (current-buffer)) #'pm-c-process-filter)
+      (if (get-buffer-window-list)
+	  (pop-to-buffer (current-buffer))
+	(switch-to-buffer-other-window (current-buffer))))))
+
 (defun pm-c-debug ()
   (interactive)
   (let ((default-directory current-root-path)
-	(executable (project-name current-project)))
-    (if (file-exists-p executable)
-	(gdb executable)
-      (pm-c-error-msg (format "Executable %s not found" executable)))))
+	(executable (pm-c-find-executable)))
+    (gdb executable)))
 
 (pm-register-backend
  (make-pm-backend :name "c"
@@ -111,6 +159,7 @@
 		  :close-hook 'pm-c-reset-external-vars
 		  :search 'pm-c-search
                   :compile 'pm-c-compile
+		  :exec 'pm-c-exec
 		  :debug 'pm-c-debug))
 
 (provide 'pm-c)
