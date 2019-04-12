@@ -15,6 +15,7 @@
   (find-file-hook 'ignore)
   (search 'ignore)
   (compile 'ignore)
+  (exec 'ignore)
   (debug 'ignore))
 
 (defvar project-manager-switch-hook '()
@@ -121,6 +122,10 @@
 (defun project-compile ()
   (interactive)
   (call-interactively (pm-backend-compile (project-backend current-project))))
+
+(defun project-exec ()
+  (interactive)
+  (call-interactively (pm-backend-exec (project-backend current-project))))
 
 (defun project-debug ()
   (interactive)
