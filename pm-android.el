@@ -34,9 +34,6 @@
 (defvar pm-android-compile-options-history '())
 (defvar pm-android-search-history '())
 
-(defvar pm-android-subprojects '(("out"	.	(concat "out/target/product/" aosp-board-name "/"))
-				 ("pub"	.	(concat "pub/" aosp-board-name "/"))))
-
 (defsubst pm-android-device ()
   (concat aosp-board-name "-" aosp-build-variant))
 
@@ -54,10 +51,18 @@
 		       aosp-env-vars " ")
 	    " && ")))
 
-(defsubst pm-android-load-compile-env ()
+(defsubst pm-android-load-compile-env (&optional silent)
   (concat (pm-android-env-vars)
-	  "source build/envsetup.sh && "
-	  "lunch " (pm-android-device) " && "))
+	  "source build/envsetup.sh "
+	  (if silent "&>/dev/null")
+	  " && lunch " (pm-android-device)
+	  (if silent "&>/dev/null")
+	  " && "))
+
+(defun pm-android-out-path ()
+  (let ((default-directory aosp-path)
+	(env (pm-android-load-compile-env t)))
+    (shell-command-to-string (concat env "echo -n $ANDROID_PRODUCT_OUT"))))
 
 ;; Search tools
 (defun pm-android-search (search command-args)
@@ -149,9 +154,10 @@
 
 (defun pm-android-find-file ()
   (interactive)
-  (project-find-file-subproject (append (project-subprojects current-project)
-					pm-android-subprojects)
-				'pm-android-subprojects-history))
+  (let ((android-subprojects `(("out" . ,(pm-android-out-path)))))
+    (project-find-file-subproject (append (project-subprojects current-project)
+					  android-subprojects)
+				  'pm-android-subprojects-history)))
 
 (defun pm-android-toggle-command (cmd)
   (interactive (list (read-string "Compilation option: " nil
