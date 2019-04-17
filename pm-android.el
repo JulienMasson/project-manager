@@ -8,6 +8,7 @@
 (defvar aosp-compile-options '())
 (defvar aosp-other-targets '())
 (defvar aosp-env-vars '())
+(defvar aosp-debug-func nil)
 
 ;; Internal
 (defconst pm-android-default-targets
@@ -147,6 +148,11 @@
 		"")
 	      " " target "'"))))
 
+(defun pm-android-debug ()
+  (interactive)
+  (when aosp-debug-func (functionp aosp-debug-func)
+	(call-interactively aosp-debug-func)))
+
 (defun pm-android-subproject ()
   (let ((cur-path (expand-file-name default-directory)))
     (while (not (file-exists-p (concat cur-path "/.git")))
@@ -211,6 +217,7 @@
 		  :find-file 'pm-android-find-file
 		  :find-file-hook 'pm-android-find-file-hook
 		  :search 'pm-android-search
-		  :compile 'pm-android-compile))
+		  :compile 'pm-android-compile
+		  :debug 'pm-android-debug))
 
 (provide 'pm-android)
