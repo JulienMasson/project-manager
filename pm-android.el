@@ -4,7 +4,6 @@
 (defvar aosp-path nil)
 (defvar aosp-board-name nil)
 (defvar aosp-build-variant nil)
-(defvar aosp-thread-number nil)
 (defvar aosp-compile-options '())
 (defvar aosp-env-vars '())
 
@@ -108,14 +107,14 @@
   (interactive)
   (let ((default-directory aosp-path))
     (compile (concat (pm-android-env-vars)
-		     (format "repo sync -j%d" aosp-thread-number)))))
+		     (format "repo sync -j")))))
 
 (defun pm-android-build-current ()
   (interactive)
   (let ((module-dir (untramp-path default-directory))
 	(default-directory aosp-path))
     (compile (concat (pm-android-load-compile-env)
-		     (format "cd %s && mm -j%d" module-dir aosp-thread-number)
+		     (format "cd %s && mm -j$(nproc)" module-dir)
 		     (if aosp-compile-options
 			 (mapconcat 'identity aosp-compile-options " ")
 		       "")))))
@@ -132,7 +131,7 @@
     (compile (concat
 	      "/bin/bash -c '"
 	      (pm-android-load-compile-env)
-	      "make -j" (number-to-string aosp-thread-number) " "
+	      "make -j$(nproc)"
 	      (if aosp-compile-options
 		  (mapconcat 'identity aosp-compile-options " ")
 		"")
