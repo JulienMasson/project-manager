@@ -69,6 +69,7 @@
 	(pm-kernel-build-target (mapconcat
 				 'identity
 				 `("make -j$(nproc)"
+				   ,(format "rm -rf %s*" local-path)
 				   ,(concat "make install INSTALL_PATH=" local-path)
 				   ,(concat "make headers_install INSTALL_HDR_PATH=" local-path)
 				   ,(concat "make modules_install INSTALL_MOD_PATH=" local-path)
