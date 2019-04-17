@@ -2,20 +2,21 @@
 
 ;; External
 (defvar aosp-path nil)
+(defvar aosp-out-path nil)
 (defvar aosp-board-name nil)
 (defvar aosp-build-variant nil)
 (defvar aosp-compile-options '())
+(defvar aosp-other-targets '())
 (defvar aosp-env-vars '())
 
 ;; Internal
-(defconst pm-android-targets
+(defconst pm-android-default-targets
   '(("auto"			.       pm-android-build-current)
     ("dist"			.	"dist")
     ("boot"			.	"bootimage")
     ("recovery"			.	"recoveryimage")
     ("system"			.	"systemimage")
     ("adb-fastboot"		.       "adb fastboot")
-    ("Windows-adb-fastboot"	.       "adb fastboot USE_MINGW=y")
     ("interactive"		.	pm-android-interactive-target)
     ("clean"			.	pm-android-clean-build)
     ("repo-sync"		.	pm-android-repo-sync)))
@@ -27,6 +28,12 @@
     ("jgrep"       "jgrep "  nil)
     ("find-module" "mgrep "  " | grep LOCAL_MODULE")))
 
+(defvar pm-android-subprojects
+  '(("core"	.	"system/core")
+    ("recovery"	.	"bootable/recovery")
+    ("out"      .	pm-android-out-subpath)))
+
+(defvar pm-android-targets nil)
 (defvar pm-android-compile-history '())
 (defvar pm-android-interactive-history '())
 (defvar pm-android-subprojects-history '())
@@ -62,6 +69,9 @@
   (let ((default-directory aosp-path)
 	(env (pm-android-load-compile-env t)))
     (shell-command-to-string (concat env "echo -n $ANDROID_PRODUCT_OUT"))))
+
+(defun pm-android-out-subpath ()
+  (replace-regexp-in-string aosp-path "" aosp-out-path))
 
 ;; Search tools
 (defun pm-android-search (search command-args)
@@ -151,12 +161,19 @@
 	       (string-prefix-p (aosp-path) file-name))
       (project-uniquify-buffer-name (pm-android-subproject)))))
 
+(defun pm-android-load-subprojects ()
+  (mapcar (lambda (elem)
+	    (let ((v-or-f (cdr elem)))
+	      (cons (car elem) (if (functionp v-or-f)
+				   (funcall v-or-f)
+				 (eval v-or-f)))))
+	  (append (project-subprojects current-project)
+		  pm-android-subprojects)))
+
 (defun pm-android-find-file ()
   (interactive)
-  (let ((android-subprojects `(("out" . ,(pm-android-out-path)))))
-    (project-find-file-subproject (append (project-subprojects current-project)
-					  android-subprojects)
-				  'pm-android-subprojects-history)))
+  (project-find-file-subproject (pm-android-load-subprojects)
+				'pm-android-subprojects-history))
 
 (defun pm-android-toggle-command (cmd)
   (interactive (list (read-string "Compilation option: " nil
@@ -173,8 +190,9 @@
   (pm-android-toggle-command "showcommands"))
 
 (defun pm-android-open-hook ()
-  (message "pm-android-open-hook called")
-  (setq aosp-path current-root-path))
+  (setq aosp-path current-root-path)
+  (setq aosp-out-path (concat (pm-android-out-path) "/"))
+  (setq pm-android-targets (append pm-android-default-targets aosp-other-targets)))
 
 (defun pm-android-lunch-list ()
   (let ((default-directory aosp-path))
