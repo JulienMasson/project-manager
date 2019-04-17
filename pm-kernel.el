@@ -71,7 +71,8 @@
 				 `("make -j$(nproc)"
 				   ,(concat "make install INSTALL_PATH=" local-path)
 				   ,(concat "make headers_install INSTALL_HDR_PATH=" local-path)
-				   ,(concat "make modules_install INSTALL_MOD_PATH=" local-path))
+				   ,(concat "make modules_install INSTALL_MOD_PATH=" local-path)
+				   ,(format "cp arch/%s/boot/Image %s" kernel-arch local-path))
 				 " && "))
       (pm-kernel-error-msg (format "%s doesn't exist" kernel-out-files)))))
 
