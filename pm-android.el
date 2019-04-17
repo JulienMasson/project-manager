@@ -200,6 +200,16 @@
   (setq aosp-out-path (concat (pm-android-out-path) "/"))
   (setq pm-android-targets (append pm-android-default-targets aosp-other-targets)))
 
+(defun pm-android-reset-external-vars ()
+  (setq aosp-path nil)
+  (setq aosp-out-path nil)
+  (setq aosp-board-name nil)
+  (setq aosp-build-variant nil)
+  (setq aosp-compile-options '())
+  (setq aosp-other-targets '())
+  (setq aosp-env-vars '())
+  (setq aosp-debug-func nil))
+
 (defun pm-android-lunch-list ()
   (let ((default-directory aosp-path))
     (shell-command-to-string "source build/envsetup.sh >/dev/null 2>&1 && echo ${LUNCH_MENU_CHOICES[*]}")))
@@ -214,6 +224,7 @@
 (pm-register-backend
  (make-pm-backend :name "android"
 		  :open-hook 'pm-android-open-hook
+		  :close-hook 'pm-android-reset-external-vars
 		  :find-file 'pm-android-find-file
 		  :find-file-hook 'pm-android-find-file-hook
 		  :search 'pm-android-search
