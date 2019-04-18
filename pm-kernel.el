@@ -97,7 +97,11 @@
     (format "%s && %s && %s" build-cmd install-cmd image-copy)))
 
 (defun pm-kernel-build-kernel ()
-  (pm-kernel-build-target (pm-kernel-cmd)))
+  (let* ((local-path (untramp-path kernel-out-files))
+	 (clean (format "rm -f %sconfig-* %sSystem.map-* %svmlinuz-*"
+			local-path local-path local-path))
+	 (kernel-cmd (pm-kernel-cmd)))
+  (pm-kernel-build-target (format "%s && %s" clean kernel-cmd))))
 
 (defun pm-kernel-modules-cmd ()
   (let ((local-path (untramp-path kernel-out-files)))
