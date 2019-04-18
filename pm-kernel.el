@@ -35,7 +35,9 @@
 ;; Internal
 (defvar pm-kernel-subprojects-history '())
 (defvar pm-kernel-targets
-  '(("kernel"		.	"make -j$(nproc)")
+  '(("kernel"		.	pm-kernel-build-kernel)
+    ("modules"		.	pm-kernel-build-modules)
+    ("headers"		.	pm-kernel-build-headers)
     ("all"		.	pm-kernel-build-all)
     ("clean"		.	"make clean")
     ("defconfig"	.	pm-kernel-build-defconfig)
@@ -45,9 +47,6 @@
 
 (defvar pm-kernel-debug-default-port "/dev/ttyUSB0")
 (defvar pm-kernel-debug-default-speed 115200)
-
-(defun pm-kernel-error-msg (msg)
-  (message (concat (propertize "Error: " 'face 'error) msg)))
 
 (defun pm-kernel-path-env ()
   (format "PATH=%sbin:$PATH" (untramp-path kernel-toolchain-path)))
@@ -90,23 +89,41 @@
 	(compile-env (pm-kernel-compile-env)))
     (compile (format "export %s %s && %s" path-env compile-env target))))
 
-(defun pm-kernel-build-defconfig ()
-  (pm-kernel-build-target (concat "make " kernel-defconfig)))
+(defun pm-kernel-cmd ()
+  (let* ((local-path (untramp-path kernel-out-files))
+	 (build-cmd "make -j$(nproc)")
+	 (install-cmd (concat "make install INSTALL_PATH=" local-path))
+	 (image-copy (format "cp arch/%s/boot/Image %s" kernel-arch local-path)))
+    (format "%s && %s && %s" build-cmd install-cmd image-copy)))
+
+(defun pm-kernel-build-kernel ()
+  (pm-kernel-build-target (pm-kernel-cmd)))
+
+(defun pm-kernel-modules-cmd ()
+  (let ((local-path (untramp-path kernel-out-files)))
+    (concat "make modules_install INSTALL_MOD_PATH=" local-path)))
+
+(defun pm-kernel-build-modules ()
+  (pm-kernel-build-target (pm-kernel-modules-cmd)))
+
+(defun pm-kernel-headers-cmd ()
+  (let ((local-path (untramp-path kernel-out-files)))
+    (concat "make headers_install INSTALL_HDR_PATH=" local-path)))
+
+(defun pm-kernel-build-headers ()
+  (pm-kernel-build-target (pm-kernel-headers-cmd)))
 
 (defun pm-kernel-build-all ()
-  (let ((default-directory current-root-path)
-	(local-path (untramp-path kernel-out-files)))
-    (if (file-directory-p kernel-out-files)
-	(pm-kernel-build-target (mapconcat
-				 'identity
-				 `("make -j$(nproc)"
-				   ,(format "rm -rf %s*" local-path)
-				   ,(concat "make install INSTALL_PATH=" local-path)
-				   ,(concat "make headers_install INSTALL_HDR_PATH=" local-path)
-				   ,(concat "make modules_install INSTALL_MOD_PATH=" local-path)
-				   ,(format "cp arch/%s/boot/Image %s" kernel-arch local-path))
-				 " && "))
-      (pm-kernel-error-msg (format "%s doesn't exist" kernel-out-files)))))
+  (let* ((local-path (untramp-path kernel-out-files))
+	 (clean-cmd (format "rm -rf %s*" local-path))
+	 (kernel-cmd (pm-kernel-cmd))
+	 (modules-cmd (pm-kernel-modules-cmd))
+	 (headers-cmd (pm-kernel-headers-cmd)))
+    (pm-kernel-build-target (format "%s && %s && %s && %s"
+				    clean-cmd kernel-cmd modules-cmd headers-cmd))))
+
+(defun pm-kernel-build-defconfig ()
+  (pm-kernel-build-target (concat "make " kernel-defconfig)))
 
 (defun pm-kernel-compile (target)
   (interactive (list (completing-read "Build target: "
