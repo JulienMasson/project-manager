@@ -23,6 +23,7 @@
 ;;; Code:
 
 (require 'project-manager)
+(require 'multi-term)
 
 ;; External
 (defvar kernel-arch nil)
@@ -37,7 +38,8 @@
   '(("kernel"		.	"make -j$(nproc)")
     ("all"		.	pm-kernel-build-all)
     ("clean"		.	"make clean")
-    ("defconfig"	.	pm-kernel-build-defconfig)))
+    ("defconfig"	.	pm-kernel-build-defconfig)
+    ("menuconfig"	.	pm-kernel-make-menuconfig)))
 
 (defvar pm-kernel-subprojects '(("out"	. kernel-out-files)))
 
@@ -52,6 +54,35 @@
 
 (defun pm-kernel-compile-env ()
   (format "ARCH=%s CROSS_COMPILE=%s" kernel-arch kernel-cross-compile))
+
+(defun pm-kernel-term-send-command (cmd)
+  (term-send-raw-string cmd)
+  (term-send-return))
+
+(defun pm-kernel-term-setup-remote (buffer)
+  (let* ((dissect (tramp-dissect-file-name current-root-path))
+	 (user (tramp-file-name-user dissect))
+	 (host (tramp-file-name-host dissect))
+	 (ssh-cmd (concat "ssh " (if user (format "%s@" user)) host))
+	 (path-cmd (concat "cd " (untramp-path current-root-path))))
+    (pm-kernel-term-send-command ssh-cmd)
+    (pm-kernel-term-send-command path-cmd)))
+
+(defun pm-kernel-make-menuconfig ()
+  (interactive)
+  (let* ((default-directory current-root-path)
+	 (path-env (pm-kernel-path-env))
+	 (compile-env (pm-kernel-compile-env))
+	 (buffer-name (format "menuconfig-%s" (project-name current-project)))
+	 (term-buffer (make-term buffer-name "/bin/bash")))
+    (set-buffer term-buffer)
+    (multi-term-internal)
+    (when (tramp-tramp-file-p current-root-path)
+      (pm-kernel-term-setup-remote term-buffer))
+    (pm-kernel-term-send-command (format "export %s %s" path-env compile-env))
+    (pm-kernel-term-send-command "make menuconfig")
+    (setq-local global-hl-line-mode nil)
+    (switch-to-buffer-other-window term-buffer)))
 
 (defun pm-kernel-build-target (target)
   (let ((default-directory current-root-path)
