@@ -98,40 +98,38 @@
 
 (defun pm-kernel-cmd ()
   (let* ((local-path (untramp-path kernel-out-files))
+	 (clean (format "rm -f %sImage %sconfig-* %sSystem.map-* %svmlinuz-*"
+			local-path local-path local-path local-path))
 	 (build-cmd "make -j$(nproc)")
 	 (install-cmd (concat "make install INSTALL_PATH=" local-path))
 	 (image-copy (format "cp arch/%s/boot/Image %s" kernel-arch local-path)))
-    (format "%s && %s && %s" build-cmd install-cmd image-copy)))
+    (format "%s && %s && %s && %s" build-cmd clean install-cmd image-copy)))
 
 (defun pm-kernel-build-kernel ()
-  (let* ((local-path (untramp-path kernel-out-files))
-	 (clean (format "rm -f %sconfig-* %sSystem.map-* %svmlinuz-*"
-			local-path local-path local-path))
-	 (kernel-cmd (pm-kernel-cmd)))
-  (pm-kernel-build-target (format "%s && %s" clean kernel-cmd))))
+  (pm-kernel-build-target (pm-kernel-cmd)))
 
 (defun pm-kernel-modules-cmd ()
-  (let ((local-path (untramp-path kernel-out-files)))
-    (concat "make modules_install INSTALL_MOD_PATH=" local-path)))
+  (let* ((local-path (untramp-path kernel-out-files))
+	 (clean (format "rm -rf %slib" local-path)))
+    (format "%s && make modules_install INSTALL_MOD_PATH=%s" clean local-path)))
 
 (defun pm-kernel-build-modules ()
   (pm-kernel-build-target (pm-kernel-modules-cmd)))
 
 (defun pm-kernel-headers-cmd ()
-  (let ((local-path (untramp-path kernel-out-files)))
-    (concat "make headers_install INSTALL_HDR_PATH=" local-path)))
+  (let* ((local-path (untramp-path kernel-out-files))
+	 (clean (format "rm -rf %sinclude" local-path)))
+    (format "%s && make headers_install INSTALL_HDR_PATH=%s" clean local-path)))
 
 (defun pm-kernel-build-headers ()
   (pm-kernel-build-target (pm-kernel-headers-cmd)))
 
 (defun pm-kernel-build-all ()
-  (let* ((local-path (untramp-path kernel-out-files))
-	 (clean-cmd (format "rm -rf %s*" local-path))
-	 (kernel-cmd (pm-kernel-cmd))
+  (let* ((kernel-cmd (pm-kernel-cmd))
 	 (modules-cmd (pm-kernel-modules-cmd))
 	 (headers-cmd (pm-kernel-headers-cmd)))
     (pm-kernel-build-target (format "%s && %s && %s && %s"
-				    clean-cmd kernel-cmd modules-cmd headers-cmd))))
+				    kernel-cmd modules-cmd headers-cmd))))
 
 (defun pm-kernel-build-defconfig ()
   (pm-kernel-build-target (concat "make " kernel-defconfig)))
