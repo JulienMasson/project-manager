@@ -28,6 +28,10 @@
 (defcustom pm-kernel-local-debug-toolchain nil
   "Local toolchain used when debugging remote project root path")
 
+(defcustom pm-kernel-local-sshfs-dir (format "/home/%s/.cache/project-manager/"
+					     (getenv "USER"))
+  "Local directory used to sshfs remote project root path when debugging")
+
 ;; External
 (defvar kernel-arch nil)
 (defvar kernel-cross-compile nil)
@@ -164,6 +168,18 @@
   (let ((default-directory current-root-path))
     (grep (concat grep-command " --include=\"*.[c|h]\" " search))))
 
+(defun pm-kernel-vmlinux-path ()
+  (if (tramp-tramp-file-p current-root-path)
+      (let ((src (replace-regexp-in-string "^/ssh:\\(.*\\)/$" "\\1"
+					   current-root-path))
+	    (dest (concat pm-kernel-local-sshfs-dir
+			  (project-name current-project))))
+	(unless (file-directory-p dest)
+	  (mkdir dest))
+	(shell-command (format "sshfs %s %s" src dest))
+	(concat dest "/vmlinux"))
+    (concat current-root-path "vmlinux")))
+
 (defun pm-kernel-debug-toolchain-path ()
   (format "%sbin/%sgdb" (if (tramp-tramp-file-p current-root-path)
 			    pm-kernel-local-debug-toolchain
@@ -173,8 +189,8 @@
 (defun pm-kernel-debug (trigger)
   (interactive (list (yes-or-no-p "Trigger KGDB ? ")))
   (let ((default-directory current-root-path)
-	(vmlinux (concat current-root-path "vmlinux"))
 	(gdb-default-cmd (pm-kernel-debug-toolchain-path))
+	(vmlinux (pm-kernel-vmlinux-path))
 	(port pm-kernel-debug-default-port)
 	(speed pm-kernel-debug-default-speed)
 	(kgdb-default-root-cmd "sudo su"))
