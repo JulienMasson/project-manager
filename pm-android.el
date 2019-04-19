@@ -185,11 +185,11 @@
   (interactive (list (read-string "Compilation option: " nil
 				  'pm-android-compile-options-history)))
   (let ((msg-fmt "Compilation option \"%s\" %s."))
-  (if (find cmd aosp-compile-options :test 'string=)
-      (progn (setq aosp-compile-options (delete cmd aosp-compile-options))
-	     (message (propertize (format msg-fmt cmd "deactivated") 'face 'error)))
-    (add-to-list 'aosp-compile-options cmd)
-    (message (propertize (format msg-fmt cmd "activated") 'face 'success)))))
+    (if (find cmd aosp-compile-options :test 'string=)
+	(progn (setq aosp-compile-options (delete cmd aosp-compile-options))
+	       (message (propertize (format msg-fmt cmd "deactivated") 'face 'error)))
+      (add-to-list 'aosp-compile-options cmd)
+      (message (propertize (format msg-fmt cmd "activated") 'face 'success)))))
 
 (defun pm-android-toggle-showcommands ()
   (interactive)

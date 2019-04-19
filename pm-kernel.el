@@ -155,9 +155,9 @@
 	 (subprojects (cl-remove-if-not 'file-directory-p subprojects
 					:key #'cdr))
 	 (subproject (ido-completing-read (format "Subproject (project %s): "
-					      (project-name current-project))
-				      subprojects
-				      nil t nil 'pm-kernel-subprojects-history))
+						  (project-name current-project))
+					  subprojects
+					  nil t nil 'pm-kernel-subprojects-history))
 	 (default-directory (assoc-default subproject subprojects)))
     (ido-find-file)))
 
