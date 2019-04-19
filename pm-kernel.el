@@ -168,15 +168,21 @@
   (let ((default-directory current-root-path))
     (grep (concat grep-command " --include=\"*.[c|h]\" " search))))
 
+(defun pm-kernel-check-sshfs (src dest)
+  (seq-find (lambda (line)
+	      (string-match-p (format "^%s on %s type.*" src dest) line))
+	    (process-lines "mount")))
+
 (defun pm-kernel-vmlinux-path ()
   (if (tramp-tramp-file-p current-root-path)
       (let ((src (replace-regexp-in-string "^/ssh:\\(.*\\)/$" "\\1"
 					   current-root-path))
 	    (dest (concat pm-kernel-local-sshfs-dir
 			  (project-name current-project))))
-	(unless (file-directory-p dest)
-	  (mkdir dest))
-	(shell-command (format "sshfs %s %s" src dest))
+	(unless (pm-kernel-check-sshfs src dest)
+	  (unless (file-directory-p dest)
+	    (mkdir dest))
+	  (shell-command (format "sshfs %s %s" src dest)))
 	(concat dest "/vmlinux"))
     (concat current-root-path "vmlinux")))
 
