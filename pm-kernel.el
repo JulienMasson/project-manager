@@ -25,6 +25,9 @@
 (require 'project-manager)
 (require 'multi-term)
 
+(defcustom pm-kernel-local-debug-toolchain nil
+  "Local toolchain used when debugging remote project root path")
+
 ;; External
 (defvar kernel-arch nil)
 (defvar kernel-cross-compile nil)
@@ -161,12 +164,17 @@
   (let ((default-directory current-root-path))
     (grep (concat grep-command " --include=\"*.[c|h]\" " search))))
 
+(defun pm-kernel-debug-toolchain-path ()
+  (format "%sbin/%sgdb" (if (tramp-tramp-file-p current-root-path)
+			    pm-kernel-local-debug-toolchain
+			  kernel-toolchain-path)
+	  kernel-cross-compile))
+
 (defun pm-kernel-debug (trigger)
   (interactive (list (yes-or-no-p "Trigger KGDB ? ")))
   (let ((default-directory current-root-path)
-	(gdb-default-cmd (format "%sbin/%sgdb" kernel-toolchain-path
-				 kernel-cross-compile))
 	(vmlinux (concat current-root-path "vmlinux"))
+	(gdb-default-cmd (pm-kernel-debug-toolchain-path))
 	(port pm-kernel-debug-default-port)
 	(speed pm-kernel-debug-default-speed)
 	(kgdb-default-root-cmd "sudo su"))
