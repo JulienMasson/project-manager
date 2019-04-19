@@ -169,7 +169,7 @@
 	(vmlinux (concat current-root-path "vmlinux"))
 	(port pm-kernel-debug-default-port)
 	(speed pm-kernel-debug-default-speed)
-	(kgdb-default-root-cmd "su"))
+	(kgdb-default-root-cmd "sudo su"))
     (kgdb vmlinux port speed trigger)))
 
 (pm-register-backend
