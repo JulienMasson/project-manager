@@ -50,8 +50,6 @@
     ("defconfig"	.	pm-kernel-build-defconfig)
     ("menuconfig"	.	pm-kernel-make-menuconfig)))
 
-(defvar pm-kernel-subprojects '(("out"	. kernel-out-files)))
-
 (defvar pm-kernel-debug-default-port "/dev/ttyUSB0")
 (defvar pm-kernel-debug-default-speed 115200)
 
@@ -144,7 +142,8 @@
 
 (defun pm-kernel-build-subprojects ()
   (append `(("root"	.	,current-root-path)
-	    ("out"	.	,kernel-out-files))
+	    ("out"	.	,kernel-out-files)
+	    ("docs"	.	,(concat current-root-path "Documentation")))
 	  (mapcar (lambda (p)
 		    `(,(car p) . ,(concat current-root-path (cdr p))))
 		  (project-subprojects current-project))))
