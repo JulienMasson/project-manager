@@ -24,6 +24,7 @@
 
 (require 'project-manager)
 (require 'multi-term)
+(require 'rg)
 
 (defcustom pm-kernel-local-debug-toolchain nil
   "Local toolchain used when debugging remote project root path")
@@ -49,6 +50,10 @@
     ("clean"		.	"make clean")
     ("defconfig"	.	pm-kernel-build-defconfig)
     ("menuconfig"	.	pm-kernel-make-menuconfig)))
+
+(defvar pm-kernel-search-tools
+  '(("rg"	.	pm-kernel-rg)
+    ("grep"	.	pm-kernel-grep)))
 
 (defvar pm-kernel-debug-default-port "/dev/ttyUSB0")
 (defvar pm-kernel-debug-default-speed 115200)
@@ -160,10 +165,20 @@
 	 (default-directory (assoc-default subproject subprojects)))
     (ido-find-file)))
 
-(defun pm-kernel-search (search)
+(defun pm-kernel-grep (search)
   (interactive "sGrep search: ")
   (let ((default-directory current-root-path))
     (grep (concat grep-command " --include=\"*.[c|h]\" " search))))
+
+(defun pm-kernel-rg (search)
+  (interactive "sRipgrep search: ")
+  (let ((default-directory current-root-path))
+    (rg-run search "all" current-root-path)))
+
+(defun pm-kernel-search (tools)
+  (interactive (list (completing-read "Search tools: "
+				      (mapcar 'car pm-kernel-search-tools))))
+  (call-interactively (assoc-default tools pm-kernel-search-tools)))
 
 (defun pm-kernel-check-sshfs (src dest)
   (seq-find (lambda (line)
