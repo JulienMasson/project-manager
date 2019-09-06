@@ -72,7 +72,7 @@
     (shell-command-to-string (concat env "echo -n $ANDROID_PRODUCT_OUT"))))
 
 (defun pm-android-out-subpath ()
-  (replace-regexp-in-string aosp-path "" aosp-out-path))
+  (replace-regexp-in-string (untramp-path aosp-path) "" aosp-out-path))
 
 ;; Search tools
 (defun pm-android-search (search command-args)
