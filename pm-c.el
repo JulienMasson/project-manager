@@ -28,6 +28,7 @@
 (defvar c-executable nil)
 (defvar c-export-vars nil)
 (defvar c-build-system nil)
+(defvar c-configure-extra-args nil)
 
 ;; Internal
 (defvar pm-c-exec-process nil)
@@ -42,20 +43,31 @@
 (defvar pm-c-autotools-build-system
   '(("make"		.	"make -j$(nproc)")
     ("clean"		.	"make clean")
-    ("configure"	.	"./autogen.sh && ./configure")
+    ("configure"	.	pm-c-autotools-configure)
     ("install"		.	"make install")
     ("test"		.	"make test")))
 
 (defvar pm-c-meson-build-system
   '(("make"		.	"ninja -j$(nproc) -C build")
     ("clean"		.	"ninja clean -C build && rm -rf build")
-    ("configure"	.	"meson build")
+    ("configure"	.	pm-c-meson-configure)
     ("install"		.	"ninja -C build install")))
 
 (defvar pm-c-build-system-assoc
   '((make	.	pm-c-make-build-system)
     (autotools	.	pm-c-autotools-build-system)
     (meson	.	pm-c-meson-build-system)))
+
+(defun pm-c-autotools-configure ()
+  (pm-c-build-target (if c-configure-extra-args
+			 (format "./autogen.sh %s && ./configure %s"
+				 c-configure-extra-args c-configure-extra-args)
+		       "./autogen.sh && ./configure")))
+
+(defun pm-c-meson-configure ()
+  (pm-c-build-target (if c-configure-extra-args
+			 (concat "meson build " c-configure-extra-args)
+		       "meson build")))
 
 (defun pm-c-error-msg (msg)
   (message (concat (propertize "Error: " 'face 'error) msg)))
@@ -83,7 +95,7 @@
   (let ((t-or-f (assoc-default target pm-c-current-build-system)))
     (if (functionp t-or-f)
   	(funcall t-or-f)
-      (pm-c-build-target t-or-f))))
+      (pm-c-build-target (eval t-or-f)))))
 
 (defun pm-c-set-current-build-system ()
   (let ((default-targets '(("interactive" . pm-c-build-interactive)))
@@ -93,7 +105,8 @@
 (defun pm-c-reset-external-vars ()
   (setq c-executable nil)
   (setq c-export-vars nil)
-  (setq c-build-system nil))
+  (setq c-build-system nil)
+  (setq c-configure-extra-args nil))
 
 (defun pm-c-search (search)
   (interactive "sGrep search: ")
