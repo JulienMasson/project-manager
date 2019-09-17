@@ -13,7 +13,7 @@
 ;; Internal
 (defconst pm-android-default-targets
   '(("auto"			.       pm-android-build-current)
-    ("dist"			.	"dist")
+    ("dist"			.	"out/dist")
     ("boot"			.	"bootimage")
     ("recovery"			.	"recoveryimage")
     ("system"			.	"systemimage")
