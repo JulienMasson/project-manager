@@ -26,6 +26,7 @@
 
 ;; External
 (defvar c-executable nil)
+(defvar c-executable-args nil)
 (defvar c-export-vars nil)
 (defvar c-build-system nil)
 (defvar c-configure-extra-args nil)
@@ -104,6 +105,7 @@
 
 (defun pm-c-reset-external-vars ()
   (setq c-executable nil)
+  (setq c-executable-args nil)
   (setq c-export-vars nil)
   (setq c-build-system nil)
   (setq c-configure-extra-args nil))
@@ -114,9 +116,10 @@
     (grep (concat grep-command " --include=\"*.[c|h]\" " search))))
 
 (defun pm-c-executable-path ()
-  (let ((default-directory current-root-path))
-    (untramp-path (if (and c-executable (file-exists-p c-executable))
-		      (concat current-root-path c-executable)
+  (let* ((default-directory current-root-path)
+	 (exec (concat default-directory c-executable)))
+    (untramp-path (if (file-exists-p exec)
+		      exec
 		    (read-file-name "Executable: ")))))
 
 (defun pm-c-process-filter (p str)
@@ -134,13 +137,18 @@
     (insert (format "Working directory: %s\n\n" root))
     (insert (format "Bash command: %s\n\n" cmd))))
 
+(defun pm-c-exec-get-cmd (exec vars)
+  (concat (if vars (format "export %s && " vars))
+	  exec
+	  (if c-executable-args (concat " " c-executable-args))))
+
 (defun pm-c-exec ()
   (interactive)
   (let* ((default-directory current-root-path)
 	 (exec (pm-c-executable-path))
 	 (exec-name (file-name-base exec))
 	 (vars (pm-c-export-vars))
-	 (cmd (concat (if vars (format "export %s && " vars)) exec))
+	 (cmd (pm-c-exec-get-cmd exec vars))
 	 (buffer-name (format "*project-manager: %s*" exec-name))
 	 (process (get-buffer-process buffer-name)))
     (if (get-buffer buffer-name)
