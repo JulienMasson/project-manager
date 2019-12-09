@@ -170,9 +170,12 @@
 
 (defun pm-c-debug ()
   (interactive)
-  (let ((default-directory current-root-path)
-	(executable (pm-c-executable-path)))
-    (gdb executable)))
+  (let* ((executable (pm-c-executable-path))
+	 (default-directory (file-name-directory executable))
+	 (env (mapcar (lambda (x)
+			(format "%s=%s" (car x) (cdr x)))
+		      c-export-vars)))
+    (gdb executable c-executable-args env)))
 
 (pm-register-backend
  (make-pm-backend :name "c"
