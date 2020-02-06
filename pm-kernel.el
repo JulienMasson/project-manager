@@ -48,6 +48,7 @@
     ("headers"		.	pm-kernel-build-headers)
     ("all"		.	pm-kernel-build-all)
     ("clean"		.	"make clean")
+    ("olddefconfig"	.	"make olddefconfig")
     ("defconfig"	.	pm-kernel-build-defconfig)
     ("menuconfig"	.	pm-kernel-make-menuconfig)))
 
@@ -91,7 +92,7 @@
     (pm-kernel-term-send-command (format "export %s %s" path-env compile-env))
     (pm-kernel-term-send-command "make menuconfig")
     (setq-local global-hl-line-mode nil)
-    (switch-to-buffer-other-window term-buffer)))
+    (switch-to-buffer term-buffer)))
 
 (defun pm-kernel-build-target (target)
   (let ((default-directory current-root-path)
