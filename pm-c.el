@@ -80,11 +80,12 @@
 	       c-export-vars " ")))
 
 (defun pm-c-build-target (target)
-  (let ((default-directory current-root-path)
-	(vars (pm-c-export-vars)))
-    (compile (concat (when vars
-		       (format "export %s && " vars))
-		     target))))
+  (let* ((default-directory current-root-path)
+	 (vars (pm-c-export-vars))
+	 (cmd (concat (when vars (format "export %s && " vars))
+		      target)))
+    (with-current-buffer (compile cmd)
+      (setq default-directory current-root-path))))
 
 (defun pm-c-build-interactive ()
   (let ((target (read-string "Build command: ")))
