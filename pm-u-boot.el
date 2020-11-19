@@ -29,12 +29,15 @@
 (defvar u-boot-cross-compile nil)
 (defvar u-boot-defconfig nil)
 (defvar u-boot-toolchain-path nil)
+(defvar u-boot-extra-targets nil)
 
 ;; Internal
-(defvar pm-u-boot-targets
-  '(("make"		.	"make -j$(nproc)")
-    ("clean"		.	"make clean")
-    ("defconfig"	.	pm-u-boot-build-defconfig)))
+(defvar pm-u-boot-default-targets
+  '(("make"       . "make -j$(nproc)")
+    ("clean"      . "make clean")
+    ("defconfig"  . pm-u-boot-build-defconfig)
+    ("menuconfig" . pm-u-boot-make-menuconfig)))
+(defvar pm-u-boot-targets nil)
 
 (defun pm-u-boot-path-env ()
   (format "PATH=%sbin:$PATH" (untramp-path u-boot-toolchain-path)))
@@ -51,6 +54,22 @@
 (defun pm-u-boot-build-defconfig ()
   (pm-u-boot-build-target (concat "make " u-boot-defconfig)))
 
+(defun pm-u-boot-make-menuconfig ()
+  (interactive)
+  (let* ((default-directory current-root-path)
+	 (path-env (pm-u-boot-path-env))
+	 (compile-env (pm-u-boot-compile-env))
+	 (buffer-name (format "menuconfig-%s" (project-name current-project)))
+	 (term-buffer (make-term buffer-name "/bin/bash")))
+    (set-buffer term-buffer)
+    (multi-term-internal)
+    (when (tramp-tramp-file-p current-root-path)
+      (pm-kernel-term-setup-remote term-buffer))
+    (pm-kernel-term-send-command (format "export %s %s" path-env compile-env))
+    (pm-kernel-term-send-command "make menuconfig")
+    (setq-local global-hl-line-mode nil)
+    (switch-to-buffer term-buffer)))
+
 (defun pm-u-boot-compile (target)
   (interactive (list (completing-read "Build target: "
 				      (mapcar 'car pm-u-boot-targets))))
@@ -64,8 +83,20 @@
   (let ((default-directory current-root-path))
     (grep (concat grep-command " --include=\"*.[c|h]\" " search))))
 
+(defun pm-u-boot-open-hook ()
+  (setq pm-u-boot-targets (append pm-u-boot-default-targets u-boot-extra-targets)))
+
+(defun pm-u-boot-close-hook ()
+  (setq u-boot-arch nil)
+  (setq u-boot-cross-compile nil)
+  (setq u-boot-defconfig nil)
+  (setq u-boot-toolchain-path nil)
+  (setq u-boot-extra-targets nil))
+
 (pm-register-backend
  (make-pm-backend :name "u-boot"
+		  :open-hook 'pm-u-boot-open-hook
+		  :close-hook 'pm-u-boot-close-hook
 		  :search 'pm-u-boot-search
 		  :compile 'pm-u-boot-compile))
 
