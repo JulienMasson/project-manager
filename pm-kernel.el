@@ -38,23 +38,22 @@
 (defvar kernel-cross-compile nil)
 (defvar kernel-defconfig nil)
 (defvar kernel-toolchain-path nil)
-(defvar kernel-out-files nil)
+(defvar kernel-extra-targets nil)
 
 ;; Internal
 (defvar pm-kernel-subprojects-history '())
-(defvar pm-kernel-targets
-  '(("kernel"		.	pm-kernel-build-kernel)
-    ("modules"		.	pm-kernel-build-modules)
-    ("headers"		.	pm-kernel-build-headers)
-    ("all"		.	pm-kernel-build-all)
-    ("clean"		.	"make clean")
-    ("olddefconfig"	.	"make olddefconfig")
-    ("defconfig"	.	pm-kernel-build-defconfig)
-    ("menuconfig"	.	pm-kernel-make-menuconfig)))
+
+(defvar pm-kernel-default-targets
+  '(("kernel"       . "make -j$(nproc)")
+    ("clean"        . "make clean")
+    ("olddefconfig" . "make olddefconfig")
+    ("defconfig"    . pm-kernel-build-defconfig)
+    ("menuconfig"   . pm-kernel-make-menuconfig)))
+(defvar pm-kernel-targets nil)
 
 (defvar pm-kernel-search-tools
-  '(("rg"	.	pm-kernel-rg)
-    ("grep"	.	pm-kernel-grep)))
+  '(("rg"   . pm-kernel-rg)
+    ("grep" . pm-kernel-grep)))
 
 (defvar pm-kernel-debug-default-port "/dev/ttyUSB0")
 (defvar pm-kernel-debug-default-speed 115200)
@@ -100,41 +99,6 @@
 	(compile-env (pm-kernel-compile-env)))
     (compile (format "export %s %s && %s" path-env compile-env target))))
 
-(defun pm-kernel-cmd ()
-  (let* ((local-path (untramp-path kernel-out-files))
-	 (clean (format "rm -f %sImage %sconfig-* %sSystem.map-* %svmlinuz-*"
-			local-path local-path local-path local-path))
-	 (build-cmd "make -j$(nproc)")
-	 (install-cmd (concat "make install INSTALL_PATH=" local-path))
-	 (image-copy (format "cp arch/%s/boot/Image %s" kernel-arch local-path)))
-    (format "%s && %s && %s && %s" build-cmd clean install-cmd image-copy)))
-
-(defun pm-kernel-build-kernel ()
-  (pm-kernel-build-target (pm-kernel-cmd)))
-
-(defun pm-kernel-modules-cmd ()
-  (let* ((local-path (untramp-path kernel-out-files))
-	 (clean (format "rm -rf %slib" local-path)))
-    (format "%s && make modules_install INSTALL_MOD_PATH=%s" clean local-path)))
-
-(defun pm-kernel-build-modules ()
-  (pm-kernel-build-target (pm-kernel-modules-cmd)))
-
-(defun pm-kernel-headers-cmd ()
-  (let* ((local-path (untramp-path kernel-out-files))
-	 (clean (format "rm -rf %sinclude" local-path)))
-    (format "%s && make headers_install INSTALL_HDR_PATH=%s" clean local-path)))
-
-(defun pm-kernel-build-headers ()
-  (pm-kernel-build-target (pm-kernel-headers-cmd)))
-
-(defun pm-kernel-build-all ()
-  (let* ((kernel-cmd (pm-kernel-cmd))
-	 (modules-cmd (pm-kernel-modules-cmd))
-	 (headers-cmd (pm-kernel-headers-cmd)))
-    (pm-kernel-build-target (format "%s && %s && %s && %s"
-				    kernel-cmd modules-cmd headers-cmd))))
-
 (defun pm-kernel-build-defconfig ()
   (pm-kernel-build-target (concat "make " kernel-defconfig)))
 
@@ -147,9 +111,8 @@
       (pm-kernel-build-target t-or-f))))
 
 (defun pm-kernel-build-subprojects ()
-  (append `(("root"	.	,current-root-path)
-	    ("out"	.	,kernel-out-files)
-	    ("docs"	.	,(concat current-root-path "Documentation")))
+  (append `(("root" . ,current-root-path)
+	    ("docs" . ,(concat current-root-path "Documentation")))
 	  (mapcar (lambda (p)
 		    `(,(car p) . ,(concat current-root-path (cdr p))))
 		  (project-subprojects current-project))))
@@ -215,8 +178,20 @@
 	(kgdb-default-root-cmd "sudo su"))
     (kgdb vmlinux port speed trigger)))
 
+(defun pm-kernel-open-hook ()
+  (setq pm-kernel-targets (append pm-kernel-default-targets kernel-extra-targets)))
+
+(defun pm-kernel-close-hook ()
+  (setq kernel-arch nil)
+  (setq kernel-cross-compile nil)
+  (setq kernel-defconfig nil)
+  (setq kernel-toolchain-path nil)
+  (setq kernel-extra-targets nil))
+
 (pm-register-backend
  (make-pm-backend :name "kernel"
+		  :open-hook 'pm-kernel-open-hook
+		  :close-hook 'pm-kernel-close-hook
 		  :find-file 'pm-kernel-ido-find-file
 		  :search 'pm-kernel-search
 		  :compile 'pm-kernel-compile
