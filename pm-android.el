@@ -200,7 +200,8 @@
 
 (defun pm-android-open-hook ()
   (setq aosp-path current-root-path)
-  (setq aosp-out-path (concat (pm-android-out-path) "/"))
+  (unless aosp-out-path
+    (setq aosp-out-path (concat (pm-android-out-path) "/")))
   (setq pm-android-targets (append pm-android-default-targets aosp-other-targets)))
 
 (defun pm-android-reset-external-vars ()
