@@ -2,6 +2,7 @@
 
 ;; External
 (defvar aosp-path nil)
+(defvar aosp-out-dir nil)
 (defvar aosp-out-path nil)
 (defvar aosp-board-name nil)
 (defvar aosp-build-variant nil)
@@ -75,7 +76,9 @@
     (shell-command-to-string (concat env "echo -n $ANDROID_PRODUCT_OUT"))))
 
 (defun pm-android-out-subpath ()
-  (replace-regexp-in-string (untramp-path aosp-path) "" aosp-out-path))
+  (if aosp-out-dir
+      (concat aosp-out-dir (replace-regexp-in-string "out/" "" aosp-out-path))
+    aosp-out-path))
 
 ;; Search tools
 (defun pm-android-search (search command-args)
@@ -206,6 +209,7 @@
 
 (defun pm-android-reset-external-vars ()
   (setq aosp-path nil)
+  (setq aosp-out-dir nil)
   (setq aosp-out-path nil)
   (setq aosp-board-name nil)
   (setq aosp-build-variant nil)
