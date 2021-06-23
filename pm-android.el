@@ -123,7 +123,7 @@
   (interactive)
   (let ((default-directory aosp-path))
     (compile (concat (pm-android-env-vars)
-		     (format "repo sync -j")))))
+		     (format ".repo/repo/repo sync -d -j$(nproc)")))))
 
 (defun pm-android-build-current ()
   (interactive)
