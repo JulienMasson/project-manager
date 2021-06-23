@@ -163,7 +163,7 @@
     (with-current-buffer buffer-name
       (pm-c-exec-insert-header cmd)
       (read-only-mode t)
-      (start-file-process exec-name (current-buffer) "bash" "-c" cmd)
+      (start-file-process exec-name (current-buffer) cmd)
       (set-process-filter (get-buffer-process (current-buffer)) #'pm-c-process-filter)
       (if (get-buffer-window-list)
 	  (pop-to-buffer (current-buffer))

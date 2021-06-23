@@ -93,13 +93,11 @@
     (unless (string-match default-directory module-dir)
       (setq module-dir default-directory))
     (compilation-start (concat
-			"/bin/bash -c '"
 			"source build/envsetup.sh && "
 			(format "cd %s && " (untramp-path module-dir))
 			(car (assoc-default search pm-android-search-tools))
 			command-args " ./ "
-			(car (last (assoc-default search pm-android-search-tools)))
-			"'")
+			(car (last (assoc-default search pm-android-search-tools))))
 		       'grep-mode)
     (with-current-buffer "*grep*"
       (setq default-directory module-dir))))
@@ -146,13 +144,12 @@
 (defun pm-android-build-target (target)
   (let ((default-directory aosp-path))
     (compile (concat
-	      "/bin/bash -c '"
 	      (pm-android-load-compile-env)
 	      "make -j$(nproc)"
 	      (if aosp-compile-options
 		  (mapconcat 'identity aosp-compile-options " ")
 		"")
-	      " " target "'"))))
+	      " " target))))
 
 (defun pm-android-debug ()
   (interactive)
