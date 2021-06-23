@@ -83,9 +83,8 @@
 
 ;; Search tools
 (defun pm-android-search (search command-args)
-  (interactive (list (ido-completing-read "Search tools: "
-					  (mapcar 'car pm-android-search-tools)
-					  nil t nil nil)
+  (interactive (list (completing-read "Search tools: "
+				      (mapcar 'car pm-android-search-tools))
 		     (read-string "Pattern: "
 				  nil 'pm-android-search-history
 				  (car pm-android-search-history))))
@@ -104,11 +103,11 @@
       (setq default-directory module-dir))))
 
 (defun pm-android-compile (target)
-  (interactive (list (ido-completing-read (format "Build target (%s:%s on %s): "
-						  (project-name current-project)
-						  (pm-android-device) (pm-android-hostname))
-					  (mapcar 'car pm-android-targets)
-					  nil t nil 'pm-android-compile-history)))
+  (interactive (list (completing-read (format "Build target (%s:%s on %s): "
+					      (project-name current-project)
+					      (pm-android-device) (pm-android-hostname))
+				      (mapcar 'car pm-android-targets)
+				      nil t nil 'pm-android-compile-history)))
   (let ((t-or-f (assoc-default target pm-android-targets)))
     (if (functionp t-or-f)
 	(call-interactively t-or-f)
@@ -222,7 +221,7 @@
 
 (defun pm-android-set-board (board)
   "Set the android board to compile"
-  (interactive (list (ido-completing-read "Board: " (split-string (pm-android-lunch-list)))))
+  (interactive (list (completing-read "Board: " (split-string (pm-android-lunch-list)))))
   (string-match "\\([a-z0-9_]+\\)-\\(\\w+\\)" board)
   (setq aosp-board-name (match-string 1 board))
   (setq aosp-build-variant (match-string 2 board)))

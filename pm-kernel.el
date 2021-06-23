@@ -122,7 +122,7 @@
   (let* ((subprojects (pm-kernel-build-subprojects))
 	 (subprojects (cl-remove-if-not 'file-directory-p subprojects
 					:key #'cdr))
-	 (subproject (ido-completing-read (format "Subproject (project %s): "
+	 (subproject (completing-read (format "Subproject (project %s): "
 						  (project-name current-project))
 					  subprojects
 					  nil t nil 'pm-kernel-subprojects-history))

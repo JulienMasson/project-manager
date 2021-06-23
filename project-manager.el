@@ -44,11 +44,11 @@
     backend))
 
 (defun switch-project (project-name)
-  (interactive (list (ido-completing-read (format "Project name%s: "
-						  (if current-project
-						      (concat " (" (project-name current-project) ")")
-						    ""))
-					  (mapcar 'project-name projects) nil t)))
+  (interactive (list (completing-read (format "Project name%s: "
+					      (if current-project
+						  (concat " (" (project-name current-project) ")")
+						""))
+				      (mapcar 'project-name projects))))
   (let* ((project (find project-name projects :key 'project-name :test 'string=))
 	 (backend (project-pm-backend project)))
     (when current-project
@@ -81,14 +81,14 @@
   				      (project-name y)))))
 
 (defun unregister-project (project-name)
-  (interactive (list (ido-completing-read "Project name: "
-					  (mapcar 'project-name projects) nil t)))
+  (interactive (list (completing-read "Project name: "
+				      (mapcar 'project-name projects))))
   (setq projects (delete-if (curry 'string= project-name)
 			    projects :key 'project-name)))
 
 (defun unregister-backend (backend-name)
-  (interactive (list (ido-completing-read "Backend name: "
-					  (mapcar 'pm-backend-name pm-backends) nil t)))
+  (interactive (list (completing-read "Backend name: "
+				      (mapcar 'pm-backend-name pm-backends))))
   (setq pm-backends (delete-if (curry 'string= backend-name)
                                pm-backends :key 'pm-backend-name)))
 
@@ -110,10 +110,9 @@
 						  dir
 						(concat current-root-path dir))))))
 	 (subprojects (cons (cons "root" current-root-path) subprojects))
-	 (subproject (ido-completing-read (format "Subproject (project %s): "
-						  (project-name current-project))
-					  subprojects
-					  nil t nil history))
+	 (subproject (completing-read (format "Subproject (project %s): "
+					      (project-name current-project))
+				      subprojects))
 	 (dir (eval (assoc-default subproject subprojects)))
 	 (default-directory (if (string-match-p "^[/~]" dir) dir (concat current-root-path dir))))
     (ido-find-file)))
@@ -144,8 +143,7 @@
 	  (project-compile))
       (let ((new-proj
 	     (cond ((= (length proj) 1) (project-name (car proj)))
-		   ((ido-completing-read "Project name: "
-					 (mapcar 'project-name proj) nil t)))))
+		   ((completing-read "Project name: " (mapcar 'project-name proj))))))
 	(unless (string= new-proj (project-name current-project))
 	  (switch-project new-proj))
 	(project-compile)))))
