@@ -13,18 +13,19 @@
 
 ;; Internal
 (defconst pm-android-default-targets
-  '(("make"        . "")
-    ("current"     . pm-android-build-current)
-    ("dist"        . "dist")
-    ("boot"        . "bootimage")
-    ("dtbo"        . "out/target/product/onyx/dtbo.img")
-    ("recovery"    . "recoveryimage")
-    ("system"      . "systemimage")
-    ("vendor"      . "vendorimage")
-    ("super"       . "superimage")
-    ("interactive" . pm-android-interactive-target)
-    ("clean"       . pm-android-clean-build)
-    ("repo-sync"   . pm-android-repo-sync)))
+  '(("make"         . "")
+    ("current"      . pm-android-build-current)
+    ("dist"         . "dist")
+    ("boot"         . "bootimage")
+    ("dtbo"         . "out/target/product/onyx/dtbo.img")
+    ("installclean" . "installclean")
+    ("recovery"     . "recoveryimage")
+    ("system"       . "systemimage")
+    ("vendor"       . "vendorimage")
+    ("super"        . "superimage")
+    ("interactive"  . pm-android-interactive-target)
+    ("clean"        . pm-android-clean-build)
+    ("repo-sync"    . pm-android-repo-sync)))
 
 (defvar pm-android-search-tools
   '(("mgrep"       "mgrep "  nil)
